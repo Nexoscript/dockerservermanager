@@ -31,7 +31,8 @@ public class ServerManager extends Thread {
                 .connectionTimeout(Duration.ofSeconds(30))
                 .responseTimeout(Duration.ofSeconds(45))
                 .build();
-        this.basePath = "E://Desktop//DOCKERSERVER//";
+        //this.basePath = "E://Desktop//DOCKERSERVER//";
+        this.basePath = "/home/DOCKERSERVER/";
         this.dockerClient = DockerClientImpl.getInstance(config, httpClient);
         this.serverContainers = new HashMap<>();
         this.getContainerNamesAndIds().forEach((containerName, containerId) -> {
