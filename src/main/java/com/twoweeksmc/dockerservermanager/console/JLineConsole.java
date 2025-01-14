@@ -51,7 +51,7 @@ public final class JLineConsole {
                 AttributedString coloredPrefix = new AttributedString(this.userPrefix());
                 String input = this.reader.readLine(coloredPrefix.toAnsi()).trim();
                 if (input.isEmpty()) {
-                    this.print("[FF3333]The input field can not be empty.");
+                    this.print("[FF3333]The input field can not be empty");
                     continue;
                 }
                 String[] inputParts = input.split(" ");
@@ -78,7 +78,8 @@ public final class JLineConsole {
                             this.print("[FF3333]Need uniqueId, platform and version argument");
                             continue;
                         }
-                        this.serverManager.recreateServerContainer(args[1].toLowerCase(), args[2].toLowerCase(), args[0]);
+                        this.serverManager.recreateServerContainer(args[1].toLowerCase(), args[2].toLowerCase(),
+                                args[0]);
                     }
                     case "restart-container" -> {
                         if (args.length < 1) {
@@ -99,13 +100,15 @@ public final class JLineConsole {
                             this.print("[FF3333]Need container name");
                             continue;
                         }
-                        if (this.serverManager.getServerState(args[0]).equals(ServerState.ONLINE)) {
+                        if (this.serverManager.getServerStateByName(args[0]).equals(ServerState.ONLINE)) {
                             this.serverManager.stopServerContainer(args[0]);
                         }
                         this.serverManager.removeServerContainer(args[0]);
                     }
                     case "list-containers" -> {
-                        this.serverManager.getContainers().forEach(container -> this.print("&e" + container.getNames()[0] + " - " + this.serverManager.getServerState(container.getId())));
+                        this.serverManager.getContainers()
+                                .forEach(container -> this.print("&e" + container.getNames()[0] + " - "
+                                        + this.serverManager.getServerStateById(container.getId())));
                     }
                     case "exit", "stop", "shutdown" -> {
                         this.isRunning = false;
@@ -113,6 +116,13 @@ public final class JLineConsole {
                     }
                     case "help" -> {
                         this.print("&7-------------------------------&eHelp&7-------------------------------");
+                        this.print(" &ecreate-container <platform> <version> &7- &f.");
+                        this.print(" &estart-container <name> &7- &f.");
+                        this.print(" &erecreate-container <uniqueId> <platform> <version> &7- &f.");
+                        this.print(" &erestart-container <name> &7- &f.");
+                        this.print(" &estop-container <name> &7- &f.");
+                        this.print(" &eremove-container <name> &7- &f.");
+                        this.print(" &elist-containers &7- &f.");
                         this.print(" &eclear &7- &fClear the console.");
                         this.print(" &eexit, shutdown, stop &7- &fShutdown the cloud.");
                         this.print(" &ehelp &7- &fShow this help menu.");
@@ -130,7 +140,7 @@ public final class JLineConsole {
     }
 
     public String prefix() {
-        String prefix = "[FB1364-F9A608]2weeksmc &7» &f";
+        String prefix = "[FB1364-F9A608]2weeksmc - dockermanager &7» &f";
         return ConsoleColor.apply("\r" + prefix);
     }
 
@@ -149,10 +159,12 @@ public final class JLineConsole {
     public void sendWelcomeMessage() {
         System.out.print("\n");
         System.out.print("\n");
-        System.out.println(ConsoleColor.apply("       [FB1364-F9A608]2weeksmc &7- &e1.0.0&7@&edevelopment"));
-        System.out.println(ConsoleColor.apply("       &fby &eezTxmMC&7 & &eDragonRex"));
+        System.out
+                .println(ConsoleColor
+                        .apply("             [FB1364-F9A608]2weeksmc - dockermanager &7- &e1.0.0&7@&edevelopment"));
+        System.out.println(ConsoleColor.apply("                     &fby &eezTxmMC&7 & &eDragonRex"));
         System.out.print("\n");
-        System.out.println(ConsoleColor.apply("       &fType &ehelp &fto list all commands."));
+        System.out.println(ConsoleColor.apply("                     &fType &ehelp &fto list all commands."));
         System.out.print("\n");
         System.out.print("\n");
     }

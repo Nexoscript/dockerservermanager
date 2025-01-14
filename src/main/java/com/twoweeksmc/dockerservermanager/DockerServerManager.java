@@ -1,6 +1,5 @@
 package com.twoweeksmc.dockerservermanager;
 
-
 import com.twoweeksmc.dockerservermanager.console.JLineConsole;
 import com.twoweeksmc.dockerservermanager.server.ServerManager;
 

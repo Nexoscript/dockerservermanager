@@ -1,13 +1,18 @@
 package com.twoweeksmc.dockerservermanager.server;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Container;
+import com.github.dockerjava.api.model.ContainerPort;
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.Ports.Binding;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ServerManager extends Thread {
+    private final int START_PORT = 10000;
     private String basePath;
     private DockerClient dockerClient;
     private HashMap<String, ServerContainer> serverContainers;
@@ -31,8 +37,8 @@ public class ServerManager extends Thread {
                 .connectionTimeout(Duration.ofSeconds(30))
                 .responseTimeout(Duration.ofSeconds(45))
                 .build();
-        //this.basePath = "E://Desktop//DOCKERSERVER//";
-        this.basePath = "/home/DOCKERSERVER/";
+        this.basePath = "E://Desktop//DOCKERSERVER//";
+        // this.basePath = "/home/DOCKERSERVER/";
         this.dockerClient = DockerClientImpl.getInstance(config, httpClient);
         this.serverContainers = new HashMap<>();
         this.getContainerNamesAndIds().forEach((containerName, containerId) -> {
@@ -41,13 +47,15 @@ public class ServerManager extends Thread {
     }
 
     public void createServerContainer(String platform, String version) {
-        ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, platform, version);
+        ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, platform, version,
+                this.getFreePort());
         String containerId = container.createAndStart();
         this.serverContainers.put(containerId, container);
     }
 
     public void recreateServerContainer(String platform, String version, String uniqueId) {
-        ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, platform, version);
+        ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, platform, version,
+                this.getFreePort());
         String containerId = container.recreateAndStartFromDirectory(uniqueId);
         this.serverContainers.put(containerId, container);
     }
@@ -84,7 +92,46 @@ public class ServerManager extends Thread {
         serverContainer.remove();
     }
 
-    public ServerState getServerState(String containerId) throws NotFoundException {
+    public int getFreePort() {
+        int port = START_PORT;
+        while (true) {
+            try (ServerSocket serverSocket = new ServerSocket(port)) {
+                serverSocket.setReuseAddress(true);
+                if (!isPortUsedByContainer(port)) {
+                    return port;
+                }
+            } catch (IOException e) {
+                port++;
+            }
+        }
+    }
+
+    private boolean isPortUsedByContainer(int port) {
+        System.out.println("TEST");
+        List<Container> containers = dockerClient.listContainersCmd()
+                .withShowAll(true)
+                .exec();
+        System.out.println("TEST2");
+        for (Container container : containers) {
+            System.out.println("TEST3");
+            for (ContainerPort containerPort : container.getPorts()) {
+                System.out.println("TEST4");
+                if (containerPort.getPublicPort() == port) {
+                    System.out.println("TEST5");
+                    return true;
+                }
+            }
+        }
+        System.out.println("TEST6");
+        return false;
+    }
+
+    public ServerState getServerStateByName(String containerName) throws NotFoundException {
+        String state = this.getContainerByName(containerName).getState();
+        return state.equalsIgnoreCase("running") ? ServerState.ONLINE : ServerState.OFFLINE;
+    }
+
+    public ServerState getServerStateById(String containerId) throws NotFoundException {
         String state = this.getContainerById(containerId).getState();
         return state.equalsIgnoreCase("running") ? ServerState.ONLINE : ServerState.OFFLINE;
     }
@@ -97,6 +144,16 @@ public class ServerManager extends Thread {
                 .filter(container -> container.getId().equalsIgnoreCase(containerId))
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Container " + containerId + " not found"));
+    }
+
+    public Container getContainerByName(String containerName) {
+        return dockerClient.listContainersCmd()
+                .withShowAll(true)
+                .exec()
+                .stream()
+                .filter(container -> container.getNames()[0].equalsIgnoreCase(containerName))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Container " + containerName + " not found"));
     }
 
     public List<Container> getContainers() throws NotFoundException {
@@ -141,8 +198,7 @@ public class ServerManager extends Thread {
                 })
                 .collect(Collectors.toMap(
                         container -> container.getNames()[0],
-                        Container::getId
-                ));
+                        Container::getId));
         if (ids.isEmpty()) {
             return new HashMap<>();
         }
