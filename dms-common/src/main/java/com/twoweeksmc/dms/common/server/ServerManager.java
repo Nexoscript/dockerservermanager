@@ -1,7 +1,12 @@
 package com.twoweeksmc.dms.common.server;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,12 +21,15 @@ import com.github.dockerjava.api.model.ContainerPort;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ServerManager extends Thread {
     private final int startPort;
     private final String basePath;
     private DockerClient dockerClient;
     private HashMap<String, ServerContainer> serverContainers;
+    private HashMap<String, Path> containerPaths;
 
     public ServerManager(int startPort, String basePath) {
         this.startPort = startPort;
@@ -41,9 +49,14 @@ public class ServerManager extends Thread {
                 .build();
         this.dockerClient = DockerClientImpl.getInstance(config, httpClient);
         this.serverContainers = new HashMap<>();
+        this.containerPaths = new HashMap<>();
         this.getContainerNamesAndIds().forEach((containerName, containerId) -> {
-            this.serverContainers.put(containerName, new ServerContainer(this.dockerClient, containerId));
+            System.out.println(containerName);
+            ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, containerId, containerName.split("/2weeksmc-server-")[1]);
+            this.serverContainers.put(containerName, container);
+            this.containerPaths.put(containerName, Path.of(container.getServerPath()));
         });
+        this.containerPaths.values().forEach((path) -> System.out.println(path.toString()));
     }
 
     public void createServerContainer(String platform, String version) {
@@ -78,6 +91,7 @@ public class ServerManager extends Thread {
 
     public void stopServerContainer(String containerName) {
         if (!this.serverContainers.containsKey(containerName)) {
+            System.out.println("Container " + containerName + " not found");
             return;
         }
         ServerContainer serverContainer = this.serverContainers.get(containerName);
@@ -86,10 +100,13 @@ public class ServerManager extends Thread {
 
     public void removeServerContainer(String containerName) {
         if (!this.serverContainers.containsKey(containerName)) {
+            System.out.println("Container " + containerName + " not found");
             return;
         }
         ServerContainer serverContainer = this.serverContainers.get(containerName);
         serverContainer.remove();
+        this.serverContainers.remove(containerName);
+        this.containerPaths.remove(containerName);
     }
 
     public int getFreePort() {
@@ -100,6 +117,7 @@ public class ServerManager extends Thread {
                 if (!isPortUsedByContainer(port)) {
                     return port;
                 }
+                port++;
             } catch (IOException e) {
                 port++;
             }
@@ -107,30 +125,44 @@ public class ServerManager extends Thread {
     }
 
     private boolean isPortUsedByContainer(int port) {
-        System.out.println("TEST");
-        List<Container> containers = dockerClient.listContainersCmd()
-                .withShowAll(true)
-                .exec();
-        System.out.println("TEST2");
-        for (Container container : containers) {
-            System.out.println("container.getPorts() = " + container.getPorts().length);
-            System.out.println("TEST3");
-            for (ContainerPort containerPort : container.getPorts()) {
-                System.out.println("TEST4");
-                System.out.println(containerPort.getPublicPort());
-                System.out.println(containerPort.getPublicPort() == port);
-                if (containerPort.getPublicPort() == port) {
-                    System.out.println("TEST5");
+        for (Path path : containerPaths.values()) {
+            System.out.println("Prüfe Pfad: " + path);
+
+            File serverInfoFile = new File(path.toFile(), "server-info.json");
+
+            if (!serverInfoFile.exists()) {
+                System.err.println("Datei nicht gefunden: " + serverInfoFile.getAbsolutePath());
+                continue;
+            }
+
+            try {
+                String content = new String(Files.readAllBytes(serverInfoFile.toPath()));
+                System.out.println("Gelesener Inhalt: " + content);
+
+                JSONObject jsonObject = new JSONObject(content);
+                int containerPort = jsonObject.getInt("port");
+                System.out.println("Container-Port: " + containerPort + ", Gesuchter Port: " + port);
+
+                if (containerPort == port) {
                     return true;
                 }
+            } catch (IOException e) {
+                System.err.println("Fehler beim Lesen der Datei: " + serverInfoFile.getAbsolutePath());
+                e.printStackTrace();
+            } catch (JSONException e) {
+                System.err.println("Ungültige JSON-Daten in Datei: " + serverInfoFile.getAbsolutePath());
+                e.printStackTrace();
             }
         }
-        System.out.println("TEST6");
         return false;
     }
 
-    public ServerState getServerStateByName(String containerName) throws NotFoundException {
-        String state = this.getContainerByName(containerName).getState();
+    public ServerState getServerStateByName(String containerName) {
+        String state = "";
+        try {
+            this.getContainerByName(containerName).getState();
+        } catch (NullPointerException e) {
+        }
         return state.equalsIgnoreCase("running") ? ServerState.ONLINE : ServerState.OFFLINE;
     }
 
@@ -156,7 +188,7 @@ public class ServerManager extends Thread {
                 .stream()
                 .filter(container -> container.getNames()[0].equalsIgnoreCase(containerName))
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException("Container " + containerName + " not found"));
+                .orElse(null);
     }
 
     public List<Container> getContainers() throws NotFoundException {
