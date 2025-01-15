@@ -113,9 +113,12 @@ public class ServerManager extends Thread {
                 .exec();
         System.out.println("TEST2");
         for (Container container : containers) {
+            System.out.println("container.getPorts() = " + container.getPorts().length);
             System.out.println("TEST3");
             for (ContainerPort containerPort : container.getPorts()) {
                 System.out.println("TEST4");
+                System.out.println(containerPort.getPublicPort());
+                System.out.println(containerPort.getPublicPort() == port);
                 if (containerPort.getPublicPort() == port) {
                     System.out.println("TEST5");
                     return true;

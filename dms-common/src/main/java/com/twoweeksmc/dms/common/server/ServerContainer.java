@@ -101,20 +101,20 @@ public class ServerContainer {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        return this.containerId;
+        return "/" + containerName;
     }
 
     public String recreateAndStartFromDirectory(String uniqueId) {
-        String serverPath = basePath + "/" + uniqueId + "/server"; // Verwende das Verzeichnis des entfernten Containers
+        String serverPath = basePath + "/" + uniqueId + "/server";
         String containerName = "2weeksmc-server-" + uniqueId;
         File serverDir = new File(serverPath);
         if (!serverDir.exists()) {
             serverDir.mkdirs();
         }
         Volume serverVolume = new Volume("/data");
-        ExposedPort containerPort = ExposedPort.tcp(port);
+        ExposedPort containerPort = ExposedPort.tcp(25565);
         Ports portBindings = new Ports();
-        portBindings.bind(containerPort, Ports.Binding.bindPort(25565));
+        portBindings.bind(containerPort, Ports.Binding.bindPort(port));
         CreateContainerResponse container = dockerClient.createContainerCmd("itzg/minecraft-server")
                 .withName(containerName)
                 .withHostConfig(HostConfig.newHostConfig()
@@ -125,7 +125,7 @@ public class ServerContainer {
         this.containerId = container.getId();
         dockerClient.startContainerCmd(containerId).exec();
         this.printContainerLogs(containerId);
-        return this.containerId;
+        return "/" + containerName;
     }
 
     public void printContainerLogs(String containerId) {
@@ -158,6 +158,7 @@ public class ServerContainer {
     }
 
     public void stop() {
+        System.out.println("containerId = " + containerId);
         if (containerId == null) {
             return;
         }

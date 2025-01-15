@@ -18,7 +18,7 @@ public class DMSRunner {
 
     public DMSRunner() throws IOException {
         this.console = new JLineConsole();
-        this.serverManager = new ServerManager(10000, "/home/eztxmmc/.dms-containers");
+        this.serverManager = new ServerManager(10000, "E://Desktop/2weeksmc/dms-containers");
     }
 
     public void start() {

@@ -121,6 +121,7 @@ public final class JLineConsole {
                         this.print(" &estart-container <name> &7- &f.");
                         this.print(" &erecreate-container <uniqueId> <platform> <version> &7- &f.");
                         this.print(" &erestart-container <name> &7- &f.");
+                        this.print(" &estart-container <name> &7- &f.");
                         this.print(" &estop-container <name> &7- &f.");
                         this.print(" &eremove-container <name> &7- &f.");
                         this.print(" &elist-containers &7- &f.");
