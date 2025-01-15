@@ -1,13 +1,5 @@
 package com.twoweeksmc.dms.common.server;
 
-import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.exception.NotFoundException;
-import com.github.dockerjava.api.model.Container;
-import com.github.dockerjava.api.model.ContainerPort;
-import com.github.dockerjava.core.DefaultDockerClientConfig;
-import com.github.dockerjava.core.DockerClientImpl;
-import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.time.Duration;
@@ -17,11 +9,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.exception.NotFoundException;
+import com.github.dockerjava.api.model.Container;
+import com.github.dockerjava.api.model.ContainerPort;
+import com.github.dockerjava.core.DefaultDockerClientConfig;
+import com.github.dockerjava.core.DockerClientImpl;
+import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
+
 public class ServerManager extends Thread {
-    private final int START_PORT = 10000;
-    private String basePath;
+    private final int startPort;
+    private final String basePath;
     private DockerClient dockerClient;
     private HashMap<String, ServerContainer> serverContainers;
+
+    public ServerManager(int startPort, String basePath) {
+        this.startPort = startPort;
+        this.basePath = basePath;
+    }
 
     @Override
     public void run() {
@@ -34,8 +39,6 @@ public class ServerManager extends Thread {
                 .connectionTimeout(Duration.ofSeconds(30))
                 .responseTimeout(Duration.ofSeconds(45))
                 .build();
-        this.basePath = "E://Desktop//DOCKERSERVER//";
-        // this.basePath = "/home/DOCKERSERVER/";
         this.dockerClient = DockerClientImpl.getInstance(config, httpClient);
         this.serverContainers = new HashMap<>();
         this.getContainerNamesAndIds().forEach((containerName, containerId) -> {
@@ -90,7 +93,7 @@ public class ServerManager extends Thread {
     }
 
     public int getFreePort() {
-        int port = START_PORT;
+        int port = this.startPort;
         while (true) {
             try (ServerSocket serverSocket = new ServerSocket(port)) {
                 serverSocket.setReuseAddress(true);

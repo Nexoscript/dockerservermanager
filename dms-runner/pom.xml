@@ -60,7 +60,7 @@
                                 <transformer
                                     implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>
-                                        com.twoweeksmc.dms.runner.DockerServerManager</mainClass>
+                                        com.twoweeksmc.dms.runner.DMSRunner</mainClass>
                                 </transformer>
                             </transformers>
                             <filters>

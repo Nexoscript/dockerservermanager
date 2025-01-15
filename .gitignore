@@ -37,3 +37,4 @@ build/
 
 ###
 .LCKpom*
+dependency-reduced-pom.xml

@@ -1,7 +1,11 @@
 package com.twoweeksmc.dms.console;
 
-import com.twoweeksmc.dms.common.server.ServerManager;
-import com.twoweeksmc.dms.common.server.ServerState;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -11,11 +15,8 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.InfoCmp;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import com.twoweeksmc.dms.common.server.ServerManager;
+import com.twoweeksmc.dms.common.server.ServerState;
 
 public final class JLineConsole {
     private final Terminal terminal;

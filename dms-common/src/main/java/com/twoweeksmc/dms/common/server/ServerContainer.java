@@ -11,8 +11,6 @@ import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.Ports;
 import com.github.dockerjava.api.model.Volume;
-import com.twoweeksmc.dockerservermanager.DockerServerManager;
-import com.twoweeksmc.dockerservermanager.console.JLineConsole;
 
 import java.io.Closeable;
 import java.io.File;
@@ -21,7 +19,6 @@ import java.util.UUID;
 import org.json.JSONObject;
 
 public class ServerContainer {
-    private final JLineConsole console;
     private final DockerClient dockerClient;
     private String basePath;
     private String platform;
@@ -30,7 +27,6 @@ public class ServerContainer {
     private int port;
 
     public ServerContainer(DockerClient dockerClient, String basePath, String platform, String version, int port) {
-        this.console = DockerServerManager.getInstance().getConsole();
         this.dockerClient = dockerClient;
         this.basePath = basePath;
         this.platform = platform;
@@ -39,20 +35,18 @@ public class ServerContainer {
     }
 
     public ServerContainer(DockerClient dockerClient, String containerId) {
-        this.console = DockerServerManager.getInstance().getConsole();
         this.dockerClient = dockerClient;
         this.containerId = containerId;
     }
 
     public String createAndStart() {
-        this.console.print("Minecraft-Server wird gestartet...");
         String imageName = "itzg/minecraft-server";
         String uuid = UUID.randomUUID().toString();
         String serverPath = basePath + "/" + uuid + "/server";
         String containerName = "2weeksmc-server-" + uuid;
         File serverDir = new File(serverPath);
-        if (!serverDir.exists() && serverDir.mkdirs()) {
-            this.console.print("Server-Verzeichnis erstellt: " + serverPath);
+        if (!serverDir.exists()) {
+            serverDir.mkdirs();
         }
         Volume serverVolume = new Volume("/data");
         ExposedPort containerPort = ExposedPort.tcp(25565);
@@ -67,7 +61,6 @@ public class ServerContainer {
                 .exec();
         this.containerId = container.getId();
         dockerClient.startContainerCmd(containerId).exec();
-        this.console.print("Minecraft-Server-Container gestartet mit ID: " + containerId);
         this.printContainerLogs(containerId);
         JSONObject serverInfoObject = new JSONObject();
         serverInfoObject.put("containerName", containerName);
@@ -106,18 +99,17 @@ public class ServerContainer {
             });
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return this.containerId;
     }
 
     public String recreateAndStartFromDirectory(String uniqueId) {
-        this.console.print("Minecraft-Server wird mit dem Verzeichnis eines entfernten Containers gestartet...");
         String serverPath = basePath + "/" + uniqueId + "/server"; // Verwende das Verzeichnis des entfernten Containers
         String containerName = "2weeksmc-server-" + uniqueId;
         File serverDir = new File(serverPath);
-        if (!serverDir.exists() && serverDir.mkdirs()) {
-            this.console.print("Server-Verzeichnis erstellt: " + serverPath);
+        if (!serverDir.exists()) {
+            serverDir.mkdirs();
         }
         Volume serverVolume = new Volume("/data");
         ExposedPort containerPort = ExposedPort.tcp(port);
@@ -132,7 +124,6 @@ public class ServerContainer {
                 .exec();
         this.containerId = container.getId();
         dockerClient.startContainerCmd(containerId).exec();
-        this.console.print("Minecraft-Server-Container gestartet mit ID: " + containerId);
         this.printContainerLogs(containerId);
         return this.containerId;
     }
@@ -145,7 +136,6 @@ public class ServerContainer {
                     .exec(new ResultCallback.Adapter<Frame>() {
                         @Override
                         public void onNext(Frame frame) {
-                            console.print(new String(frame.getPayload()).trim());
                         }
                     }).awaitCompletion();
         } catch (InterruptedException e) {
@@ -155,45 +145,29 @@ public class ServerContainer {
 
     public void start() {
         if (containerId == null) {
-            this.console.print("Kein Minecraft-Server-Container zum Starten gefunden.");
             return;
         }
-
-        this.console.print("Minecraft-Server wird gestartet...");
         dockerClient.startContainerCmd(containerId).exec();
-        this.console.print("Minecraft-Server-Container gestartet mit ID: " + containerId + ".");
     }
 
     public void restart() {
         if (containerId == null) {
-            this.console.print("Kein Minecraft-Server-Container zum Starten gefunden.");
             return;
         }
-
-        this.console.print("Minecraft-Server wird gestartet...");
         dockerClient.restartContainerCmd(containerId).exec();
-        this.console.print("Minecraft-Server-Container gestartet mit ID: " + containerId + ".");
     }
 
     public void stop() {
         if (containerId == null) {
-            this.console.print("Kein Minecraft-Server-Container zum Stoppen gefunden.");
             return;
         }
-
-        this.console.print("Minecraft-Server wird gestoppt...");
         dockerClient.stopContainerCmd(containerId).exec();
-        this.console.print("Minecraft-Server-Container gestoppt.");
     }
 
     public void remove() {
         if (containerId == null) {
-            this.console.print("Kein Minecraft-Server-Container zum Removen gefunden.");
             return;
         }
-
-        this.console.print("Minecraft-Server wird removed...");
         dockerClient.removeContainerCmd(containerId).exec();
-        this.console.print("Minecraft-Server-Container entfernt.");
     }
 }
