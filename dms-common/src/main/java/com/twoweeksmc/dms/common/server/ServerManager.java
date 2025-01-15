@@ -1,4 +1,4 @@
-package com.twoweeksmc.dockerservermanager.server;
+package com.twoweeksmc.dms.common.server;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.exception.NotFoundException;

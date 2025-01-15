@@ -1,7 +1,7 @@
-package com.twoweeksmc.dockerservermanager.console;
+package com.twoweeksmc.dms.console;
 
-import com.twoweeksmc.dockerservermanager.server.ServerManager;
-import com.twoweeksmc.dockerservermanager.server.ServerState;
+import com.twoweeksmc.dms.common.server.ServerManager;
+import com.twoweeksmc.dms.common.server.ServerState;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;

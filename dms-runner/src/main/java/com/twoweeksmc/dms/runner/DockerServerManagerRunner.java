@@ -1,11 +1,11 @@
-package com.twoweeksmc.dockerservermanager;
+package com.twoweeksmc.dms.runner;
 
 import com.twoweeksmc.dockerservermanager.console.JLineConsole;
 import com.twoweeksmc.dockerservermanager.server.ServerManager;
 
 import java.io.IOException;
 
-public class DockerServerManager {
+public class DockerServerManagerRunner {
     private static DockerServerManager instance;
     private final ServerManager serverManager;
     private final JLineConsole console;

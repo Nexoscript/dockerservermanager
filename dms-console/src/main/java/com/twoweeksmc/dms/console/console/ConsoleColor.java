@@ -1,11 +1,12 @@
-package com.twoweeksmc.dockerservermanager.console;
+package com.twoweeksmc.dms.console;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ConsoleColor {
 
-    private static final Pattern GRADIENT_PATTERN = Pattern.compile("\\[([A-Fa-f0-9]{6})-([A-Fa-f0-9]{6})](.*?)(?=\\[|&|$)");
+    private static final Pattern GRADIENT_PATTERN = Pattern
+            .compile("\\[([A-Fa-f0-9]{6})-([A-Fa-f0-9]{6})](.*?)(?=\\[|&|$)");
     private static final Pattern COLOR_CODE_PATTERN = Pattern.compile("&([0-9A-Fa-fLl])");
     private static final Pattern HEX_PATTERN = Pattern.compile("\\[([A-Fa-f0-9]{6})](.*?)(?=\\[|&|$)");
 
@@ -26,7 +27,7 @@ public class ConsoleColor {
             "\033[95m", // &d - Light Purple
             "\033[93m", // &e - Yellow
             "\033[97m", // &f - White
-            "\033[0m"   // &r - Reset
+            "\033[0m" // &r - Reset
     };
 
     public static String apply(String text) {
@@ -75,9 +76,8 @@ public class ConsoleColor {
 
         while (colorCodeMatcher.find()) {
             char colorCode = Character.toLowerCase(colorCodeMatcher.group(1).charAt(0));
-            int index = (colorCode >= '0' && colorCode <= '9') ? colorCode - '0' :
-                    (colorCode >= 'a' && colorCode <= 'f') ? colorCode - 'a' + 10 :
-                            16;
+            int index = (colorCode >= '0' && colorCode <= '9') ? colorCode - '0'
+                    : (colorCode >= 'a' && colorCode <= 'f') ? colorCode - 'a' + 10 : 16;
 
             String replacement = index >= 0 && index < ANSI_COLORS.length ? ANSI_COLORS[index] : "";
             colorCodeMatcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
