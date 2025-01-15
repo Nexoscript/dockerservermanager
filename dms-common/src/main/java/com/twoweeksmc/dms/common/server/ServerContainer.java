@@ -14,7 +14,6 @@ import com.github.dockerjava.api.model.Volume;
 
 import java.io.Closeable;
 import java.io.File;
-import java.nio.file.Path;
 import java.util.UUID;
 
 import org.json.JSONObject;
