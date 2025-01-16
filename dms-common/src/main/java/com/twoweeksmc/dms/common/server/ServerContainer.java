@@ -5,20 +5,15 @@ import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.ExecCreateCmdResponse;
 import com.github.dockerjava.api.command.ExecStartCmd;
-import com.github.dockerjava.api.model.Bind;
-import com.github.dockerjava.api.model.ExposedPort;
-import com.github.dockerjava.api.model.Frame;
-import com.github.dockerjava.api.model.HostConfig;
-import com.github.dockerjava.api.model.Ports;
-import com.github.dockerjava.api.model.Volume;
+import com.github.dockerjava.api.exception.NotModifiedException;
+import com.github.dockerjava.api.model.*;
+import org.json.JSONObject;
 
 import java.io.Closeable;
 import java.io.File;
 import java.util.UUID;
 
-import org.json.JSONObject;
-
-public class ServerContainer {
+public class ServerContainer extends Thread {
     private final DockerClient dockerClient;
     private final String basePath;
     private String platform;
@@ -44,7 +39,11 @@ public class ServerContainer {
         this.serverPath = this.basePath + "/" + this.uniqueId + "/server";
     }
 
-    public String createAndStart() {
+    @Override
+    public void run() {
+    }
+
+    public String createAndStartContainer() {
         this.uniqueId = UUID.randomUUID();
         this.serverPath = this.basePath + "/" + this.uniqueId + "/server";
         String imageName = "itzg/minecraft-server";
@@ -67,7 +66,7 @@ public class ServerContainer {
         this.containerId = container.getId();
         System.out.println(this.containerId);
         this.dockerClient.startContainerCmd(this.containerId).exec();
-        this.printContainerLogs(this.containerId);
+        this.printContainerLogs();
         JSONObject serverInfoObject = new JSONObject();
         serverInfoObject.put("containerName", containerName);
         serverInfoObject.put("containerId", this.containerId);
@@ -110,7 +109,7 @@ public class ServerContainer {
         return "/" + containerName;
     }
 
-    public String recreateAndStartFromDirectory(String uniqueId) {
+    public String recreateAndStartContainerFromDirectory(String uniqueId) {
         this.uniqueId = UUID.fromString(uniqueId);
         this.serverPath = this.basePath + "/" + this.uniqueId + "/server";
         String containerName = "2weeksmc-server-" + this.uniqueId;
@@ -131,13 +130,13 @@ public class ServerContainer {
                 .exec();
         this.containerId = container.getId();
         this.dockerClient.startContainerCmd(this.containerId).exec();
-        this.printContainerLogs(this.containerId);
+        this.printContainerLogs();
         return "/" + containerName;
     }
 
-    public void printContainerLogs(String containerId) {
+    public void printContainerLogs() {
         try {
-            this.dockerClient.logContainerCmd(containerId)
+            this.dockerClient.logContainerCmd(this.containerId)
                     .withStdOut(true)
                     .withStdErr(true)
                     .exec(new ResultCallback.Adapter<Frame>() {
@@ -150,32 +149,45 @@ public class ServerContainer {
         }
     }
 
-    public void start() {
+    public void startContainer() {
         if (this.containerId == null) {
             return;
         }
-        this.dockerClient.startContainerCmd(this.containerId).exec();
+        try {
+            this.dockerClient.startContainerCmd(this.containerId).exec();
+        } catch (NotModifiedException ignored) {
+        }
     }
 
-    public void restart() {
+    public void restartContainer() {
         if (this.containerId == null) {
             return;
         }
-        this.dockerClient.restartContainerCmd(this.containerId).exec();
+        try {
+            this.dockerClient.restartContainerCmd(this.containerId).exec();
+        } catch (NotModifiedException ignored) {
+        }
     }
 
-    public void stop() {
+    public void stopContainer() {
         if (this.containerId == null) {
             return;
         }
-        this.dockerClient.stopContainerCmd(this.containerId).exec();
+        try {
+            this.dockerClient.stopContainerCmd(this.containerId).exec();
+        } catch (NotModifiedException ignored) {
+        }
     }
 
-    public void remove() {
+    public void removeContainer() {
         if (this.containerId == null) {
             return;
         }
-        this.dockerClient.removeContainerCmd(this.containerId).exec();
+        try {
+            this.dockerClient.stopContainerCmd(this.containerId).exec();
+            this.dockerClient.removeContainerCmd(this.containerId).exec();
+        } catch (NotModifiedException ignored) {
+        }
     }
 
     public String getServerPath() {

@@ -52,7 +52,8 @@ public class ServerManager extends Thread {
         this.mapping();
         ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, platform, version,
                 this.getFreePort());
-        String containerId = container.createAndStart();
+        container.start();
+        String containerId = container.createAndStartContainer();
         this.serverContainers.put(containerId, container);
     }
 
@@ -60,12 +61,19 @@ public class ServerManager extends Thread {
         this.mapping();
         ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, platform, version,
                 this.getFreePort());
-        String containerId = container.recreateAndStartFromDirectory(uniqueId);
+        container.start();
+        String containerId = container.recreateAndStartContainerFromDirectory(uniqueId);
         this.serverContainers.put(containerId, container);
     }
 
     public void startServerContainer(String containerName) {
         this.mapping();
+        if (containerName.equalsIgnoreCase("*")) {
+            for (ServerContainer container : this.serverContainers.values()) {
+                container.start();
+            }
+            return;
+        }
         if (!this.serverContainers.containsKey(containerName)) {
             return;
         }
@@ -75,31 +83,49 @@ public class ServerManager extends Thread {
 
     public void restartServerContainer(String containerName) {
         this.mapping();
+        if (containerName.equalsIgnoreCase("*")) {
+            for (ServerContainer container : this.serverContainers.values()) {
+                container.restartContainer();
+            }
+            return;
+        }
         if (!this.serverContainers.containsKey(containerName)) {
             return;
         }
         ServerContainer serverContainer = this.serverContainers.get(containerName);
-        serverContainer.restart();
+        serverContainer.restartContainer();
     }
 
     public void stopServerContainer(String containerName) {
         this.mapping();
+        if (containerName.equalsIgnoreCase("*")) {
+            for (ServerContainer container : this.serverContainers.values()) {
+                container.stopContainer();
+            }
+            return;
+        }
         if (!this.serverContainers.containsKey(containerName)) {
             System.out.println("Container " + containerName + " not found");
             return;
         }
         ServerContainer serverContainer = this.serverContainers.get(containerName);
-        serverContainer.stop();
+        serverContainer.stopContainer();
     }
 
     public void removeServerContainer(String containerName) {
         this.mapping();
+        if (containerName.equalsIgnoreCase("*")) {
+            for (ServerContainer container : this.serverContainers.values()) {
+                container.removeContainer();
+            }
+            return;
+        }
         if (!this.serverContainers.containsKey(containerName)) {
             System.out.println("Container " + containerName + " not found");
             return;
         }
         ServerContainer serverContainer = this.serverContainers.get(containerName);
-        serverContainer.remove();
+        serverContainer.removeContainer();
         this.serverContainers.remove(containerName);
         this.containerPaths.remove(containerName);
     }
@@ -230,6 +256,7 @@ public class ServerManager extends Thread {
         this.containerPaths = new HashMap<>();
         this.getContainerNamesAndIds().forEach((containerName, containerId) -> {
             ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, containerId, containerName.split("2weeksmc-server-")[1]);
+            container.start();
             this.serverContainers.put(containerName, container);
             this.containerPaths.put(containerName, Path.of(container.getServerPath()));
         });
