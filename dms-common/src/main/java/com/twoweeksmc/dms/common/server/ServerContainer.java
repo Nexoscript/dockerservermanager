@@ -185,6 +185,9 @@ public class ServerContainer extends Thread {
         }
         try {
             this.dockerClient.stopContainerCmd(this.containerId).exec();
+        } catch (NotModifiedException ignored) {
+        }
+        try {
             this.dockerClient.removeContainerCmd(this.containerId).exec();
         } catch (NotModifiedException ignored) {
         }
