@@ -108,7 +108,7 @@ public final class JLineConsole {
                     }
                     case "list-containers" -> {
                         this.serverManager.getContainers()
-                                .forEach(container -> this.print("&e" + container.getNames()[0] + " - "
+                                .forEach(container -> this.print("&e" + container.getNames()[0].replace("/", "") + " - "
                                         + this.serverManager.getServerStateById(container.getId())));
                     }
                     case "exit", "stop", "shutdown" -> {

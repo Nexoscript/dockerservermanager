@@ -45,18 +45,11 @@ public class ServerManager extends Thread {
                 .responseTimeout(Duration.ofSeconds(45))
                 .build();
         this.dockerClient = DockerClientImpl.getInstance(config, httpClient);
-        this.serverContainers = new HashMap<>();
-        this.containerPaths = new HashMap<>();
-        this.getContainerNamesAndIds().forEach((containerName, containerId) -> {
-            System.out.println(containerName);
-            ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, containerId, containerName.split("/2weeksmc-server-")[1]);
-            this.serverContainers.put(containerName, container);
-            this.containerPaths.put(containerName, Path.of(container.getServerPath()));
-        });
-        this.containerPaths.values().forEach((path) -> System.out.println(path.toString()));
+        this.mapping();
     }
 
     public void createServerContainer(String platform, String version) {
+        this.mapping();
         ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, platform, version,
                 this.getFreePort());
         String containerId = container.createAndStart();
@@ -64,6 +57,7 @@ public class ServerManager extends Thread {
     }
 
     public void recreateServerContainer(String platform, String version, String uniqueId) {
+        this.mapping();
         ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, platform, version,
                 this.getFreePort());
         String containerId = container.recreateAndStartFromDirectory(uniqueId);
@@ -71,6 +65,7 @@ public class ServerManager extends Thread {
     }
 
     public void startServerContainer(String containerName) {
+        this.mapping();
         if (!this.serverContainers.containsKey(containerName)) {
             return;
         }
@@ -79,6 +74,7 @@ public class ServerManager extends Thread {
     }
 
     public void restartServerContainer(String containerName) {
+        this.mapping();
         if (!this.serverContainers.containsKey(containerName)) {
             return;
         }
@@ -87,6 +83,7 @@ public class ServerManager extends Thread {
     }
 
     public void stopServerContainer(String containerName) {
+        this.mapping();
         if (!this.serverContainers.containsKey(containerName)) {
             System.out.println("Container " + containerName + " not found");
             return;
@@ -96,6 +93,7 @@ public class ServerManager extends Thread {
     }
 
     public void removeServerContainer(String containerName) {
+        this.mapping();
         if (!this.serverContainers.containsKey(containerName)) {
             System.out.println("Container " + containerName + " not found");
             return;
@@ -123,32 +121,22 @@ public class ServerManager extends Thread {
 
     private boolean isPortUsedByContainer(int port) {
         for (Path path : containerPaths.values()) {
-            System.out.println("Prüfe Pfad: " + path);
-
             File serverInfoFile = new File(path.toFile(), "server-info.json");
-
             if (!serverInfoFile.exists()) {
-                System.err.println("Datei nicht gefunden: " + serverInfoFile.getAbsolutePath());
+                System.out.println("File " + serverInfoFile.getAbsolutePath() + " not found");
                 continue;
             }
-
             try {
                 String content = new String(Files.readAllBytes(serverInfoFile.toPath()));
-                System.out.println("Gelesener Inhalt: " + content);
-
                 JSONObject jsonObject = new JSONObject(content);
                 int containerPort = jsonObject.getInt("port");
-                System.out.println("Container-Port: " + containerPort + ", Gesuchter Port: " + port);
-
                 if (containerPort == port) {
                     return true;
                 }
             } catch (IOException e) {
-                System.err.println("Fehler beim Lesen der Datei: " + serverInfoFile.getAbsolutePath());
-                e.printStackTrace();
+                System.err.println("Error while reading file " + serverInfoFile.getAbsolutePath() + ": " + e.getMessage());
             } catch (JSONException e) {
-                System.err.println("Ungültige JSON-Daten in Datei: " + serverInfoFile.getAbsolutePath());
-                e.printStackTrace();
+                System.err.println("Error while parse file content to json " + serverInfoFile.getAbsolutePath() + ": " + e.getMessage());
             }
         }
         return false;
@@ -157,8 +145,8 @@ public class ServerManager extends Thread {
     public ServerState getServerStateByName(String containerName) {
         String state = "";
         try {
-            this.getContainerByName(containerName).getState();
-        } catch (NullPointerException e) {
+            state = this.getContainerByName(containerName).getState();
+        } catch (NullPointerException ignored) {
         }
         return state.equalsIgnoreCase("running") ? ServerState.ONLINE : ServerState.OFFLINE;
     }
@@ -183,7 +171,7 @@ public class ServerManager extends Thread {
                 .withShowAll(true)
                 .exec()
                 .stream()
-                .filter(container -> container.getNames()[0].equalsIgnoreCase(containerName))
+                .filter(container -> container.getNames()[0].equalsIgnoreCase("/" + containerName.replace("/", "")))
                 .findFirst()
                 .orElse(null);
     }
@@ -229,12 +217,22 @@ public class ServerManager extends Thread {
                     return false;
                 })
                 .collect(Collectors.toMap(
-                        container -> container.getNames()[0],
+                        container -> container.getNames()[0].replace("/", ""),
                         Container::getId));
         if (ids.isEmpty()) {
             return new HashMap<>();
         }
         return ids;
+    }
+
+    public void mapping() {
+        this.serverContainers = new HashMap<>();
+        this.containerPaths = new HashMap<>();
+        this.getContainerNamesAndIds().forEach((containerName, containerId) -> {
+            ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, containerId, containerName.split("2weeksmc-server-")[1]);
+            this.serverContainers.put(containerName, container);
+            this.containerPaths.put(containerName, Path.of(container.getServerPath()));
+        });
     }
 
     public void close() {
