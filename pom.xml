@@ -5,15 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.twoweeksmc</groupId>
-    <artifactId>dms-parent</artifactId>
+    <artifactId>dsm-parent</artifactId>
     <version>1.0.0</version>
 
     <packaging>pom</packaging>
 
     <modules>
-        <module>dms-common</module>
-        <module>dms-console</module>
-        <module>dms-runner</module>
+        <module>dsm-common</module>
+        <module>dsm-console</module>
+        <module>dsm-runner</module>
     </modules>
 
 </project>
