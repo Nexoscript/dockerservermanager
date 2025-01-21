@@ -33,8 +33,8 @@ build/
 
 ### Mac OS ###
 .DS_Store
-/dependency-reduced-pom.xml
 
 ###
 .LCKpom*
 dependency-reduced-pom.xml
+test/

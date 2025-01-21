@@ -12,14 +12,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class ServerManager extends Thread {
     private final int startPort;
@@ -160,9 +161,11 @@ public class ServerManager extends Thread {
                     return true;
                 }
             } catch (IOException e) {
-                System.err.println("Error while reading file " + serverInfoFile.getAbsolutePath() + ": " + e.getMessage());
+                System.err.println(
+                        "Error while reading file " + serverInfoFile.getAbsolutePath() + ": " + e.getMessage());
             } catch (JSONException e) {
-                System.err.println("Error while parse file content to json " + serverInfoFile.getAbsolutePath() + ": " + e.getMessage());
+                System.err.println("Error while parse file content to json " + serverInfoFile.getAbsolutePath() + ": "
+                        + e.getMessage());
             }
         }
         return false;
@@ -255,7 +258,8 @@ public class ServerManager extends Thread {
         this.serverContainers = new HashMap<>();
         this.containerPaths = new HashMap<>();
         this.getContainerNamesAndIds().forEach((containerName, containerId) -> {
-            ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, containerId, containerName.split("2weeksmc-server-")[1]);
+            ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, containerId,
+                    containerName.split("2weeksmc-server-")[1]);
             container.start();
             this.serverContainers.put(containerName, container);
             this.containerPaths.put(containerName, Path.of(container.getServerPath()));
