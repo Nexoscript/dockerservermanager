@@ -1,4 +1,4 @@
-package com.twoweeksmc.dsm.common.server;
+package de.eztxm.dsm.common.server;
 
 public enum ServerState {
     OFFLINE,

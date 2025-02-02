@@ -1,9 +1,10 @@
-package com.twoweeksmc.dsm.console;
+package de.eztxm.dsm.console;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 import org.jline.reader.EndOfFileException;
@@ -15,8 +16,8 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.InfoCmp;
 
-import com.twoweeksmc.dsm.common.server.ServerManager;
-import com.twoweeksmc.dsm.common.server.ServerState;
+import de.eztxm.dsm.common.server.manager.ServerManager;
+import de.eztxm.dsm.common.server.ServerState;
 
 public final class JLineConsole {
     private final Terminal terminal;
@@ -30,7 +31,6 @@ public final class JLineConsole {
         this.terminal = TerminalBuilder.builder()
                 .system(true)
                 .jansi(true)
-                .dumb(true)
                 .encoding(StandardCharsets.UTF_8)
                 .build();
         this.terminal.enterRawMode();
@@ -38,6 +38,7 @@ public final class JLineConsole {
                 .terminal(this.terminal)
                 .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
                 .option(LineReader.Option.AUTO_PARAM_SLASH, false)
+                .variable(LineReader.HISTORY_FILE, Paths.get(System.getProperty("user.home"), ".jline_history"))
                 .build();
         AttributedString coloredPrefix = new AttributedString(this.userPrefix());
         this.reader.setPrompt(coloredPrefix.toAnsi());
@@ -60,21 +61,21 @@ public final class JLineConsole {
                 String[] args = Arrays.copyOfRange(inputParts, 1, inputParts.length);
                 switch (command) {
                     case "clear" -> this.clear();
-                    case "create-container" -> {
+                    case "create-container", "create-con" -> {
                         if (args.length < 2) {
                             this.print("[FF3333]Need platform and version argument");
                             continue;
                         }
                         this.serverManager.createServerContainer(args[0].toLowerCase(), args[1].toLowerCase());
                     }
-                    case "start-container" -> {
+                    case "start-container", "start-con" -> {
                         if (args.length < 1) {
                             this.print("[FF3333]Need container name");
                             continue;
                         }
                         this.serverManager.startServerContainer(args[0]);
                     }
-                    case "recreate-container" -> {
+                    case "recreate-container", "recreate-con" -> {
                         if (args.length < 3) {
                             this.print("[FF3333]Need uniqueId, platform and version argument");
                             continue;
@@ -82,21 +83,21 @@ public final class JLineConsole {
                         this.serverManager.recreateServerContainer(args[1].toLowerCase(), args[2].toLowerCase(),
                                 args[0]);
                     }
-                    case "restart-container" -> {
+                    case "restart-container", "restart-con" -> {
                         if (args.length < 1) {
                             this.print("[FF3333]Need container name");
                             continue;
                         }
                         this.serverManager.restartServerContainer(args[0]);
                     }
-                    case "stop-container" -> {
+                    case "stop-container", "stop-con" -> {
                         if (args.length < 1) {
                             this.print("[FF3333]Need container name");
                             continue;
                         }
                         this.serverManager.stopServerContainer(args[0]);
                     }
-                    case "remove-container" -> {
+                    case "remove-container", "remove-con" -> {
                         if (args.length < 1) {
                             this.print("[FF3333]Need container name");
                             continue;
@@ -106,7 +107,7 @@ public final class JLineConsole {
                         }
                         this.serverManager.removeServerContainer(args[0]);
                     }
-                    case "list-containers" -> {
+                    case "list-containers", "list-cons" -> {
                         this.serverManager.getContainers()
                                 .forEach(container -> this.print("&e" + container.getNames()[0].replace("/", "") + " - "
                                         + this.serverManager.getServerStateById(container.getId())));
@@ -117,17 +118,16 @@ public final class JLineConsole {
                     }
                     case "help" -> {
                         this.print("&7-------------------------------&eHelp&7-------------------------------");
-                        this.print(" &ecreate-container <platform> <version> &7- &f.");
-                        this.print(" &estart-container <name> &7- &f.");
-                        this.print(" &erecreate-container <uniqueId> <platform> <version> &7- &f.");
-                        this.print(" &erestart-container <name> &7- &f.");
-                        this.print(" &estart-container <name> &7- &f.");
-                        this.print(" &estop-container <name> &7- &f.");
-                        this.print(" &eremove-container <name> &7- &f.");
-                        this.print(" &elist-containers &7- &f.");
-                        this.print(" &eclear &7- &fClear the console.");
-                        this.print(" &eexit, shutdown, stop &7- &fShutdown the cloud.");
-                        this.print(" &ehelp &7- &fShow this help menu.");
+                        this.print("&b create-container <platform> <version> &7- &fCreate a container with the platform and version");
+                        this.print("&b recreate-container <uniqueId> <platform> <version> &7- &fRecreate a container with the uniqueId");
+                        this.print("&b restart-container <name> &7- &fRestart a container with the name");
+                        this.print("&b start-container <name> &7- &fStart a container with the name");
+                        this.print("&b stop-container <name> &7- &fStop a container with the name");
+                        this.print("&b remove-container <name> &7- &fRemove a container with the name");
+                        this.print("&b list-containers &7- &fList of the containers as name");
+                        this.print("&b clear &7- &fClear the console");
+                        this.print("&b exit, shutdown, stop &7- &fShutdown the cloud");
+                        this.print("&b help &7- &fShow this help menu");
                         this.print("&7-------------------------------&eHelp&7-------------------------------");
                     }
                     default -> this.print("Unknown command: " + command);
@@ -142,31 +142,25 @@ public final class JLineConsole {
     }
 
     public String prefix() {
-        String prefix = "[FB1364-F9A608]2weeksmc - dockermanager &7» &f";
+        String prefix = "[33afff-33ffff]dockermanager &7» &f";
         return ConsoleColor.apply("\r" + prefix);
     }
 
     public String userPrefix() {
         try {
             String hostname = InetAddress.getLocalHost().getHostName();
-            String prefix = "[FB1364-F9A608]%hostname &7» &f".replace("%hostname", hostname);
+            String prefix = "[33afff-33ffff]%hostname &7» &f".replace("%hostname", hostname);
             return ConsoleColor.apply("\r" + prefix);
-
         } catch (UnknownHostException e) {
             return ConsoleColor
-                    .apply("\r" + "[FB1364-F9A608]2weeksmc&7@&e%hostname &7» &f".replace("%hostname", "unknown"));
+                    .apply("\r" + "[33afff-33ffff]&7@&e%hostname &7» &f".replace("%hostname", "unknown"));
         }
     }
 
     public void sendWelcomeMessage() {
         System.out.print("\n");
         System.out.print("\n");
-        System.out
-                .println(ConsoleColor
-                        .apply("             [FB1364-F9A608]2weeksmc - dockermanager &7- &e1.0.0&7@&edevelopment"));
-        System.out.println(ConsoleColor.apply("                     &fby &eezTxmMC&7 & &eDragonRex"));
-        System.out.print("\n");
-        System.out.println(ConsoleColor.apply("                     &fType &ehelp &fto list all commands."));
+        System.out.println(ConsoleColor.apply("  &fType &bhelp &fto list all commands."));
         System.out.print("\n");
         System.out.print("\n");
     }

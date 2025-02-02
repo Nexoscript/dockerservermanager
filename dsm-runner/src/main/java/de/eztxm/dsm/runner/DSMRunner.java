@@ -1,9 +1,9 @@
-package com.twoweeksmc.dsm.runner;
+package de.eztxm.dsm.runner;
 
 import java.io.IOException;
 
-import com.twoweeksmc.dsm.common.server.ServerManager;
-import com.twoweeksmc.dsm.console.JLineConsole;
+import de.eztxm.dsm.common.server.manager.ServerManager;
+import de.eztxm.dsm.console.JLineConsole;
 
 public class DSMRunner {
     private static DSMRunner instance;
@@ -18,7 +18,7 @@ public class DSMRunner {
 
     public DSMRunner() throws IOException {
         this.console = new JLineConsole();
-        this.serverManager = new ServerManager(10000, "/home/eztxmmc/.dsm-containers");
+        this.serverManager = new ServerManager("2weeksmc-server", 10000, "/home/eztxmmc/.dsm-containers");
     }
 
     public void start() {

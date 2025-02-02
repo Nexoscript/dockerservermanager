@@ -1,4 +1,4 @@
-package com.twoweeksmc.dsm.common.server;
+package de.eztxm.dsm.common.server.container;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
@@ -14,6 +14,7 @@ import java.io.File;
 import java.util.UUID;
 
 public class ServerContainer extends Thread {
+    private final String prefix;
     private final DockerClient dockerClient;
     private final String basePath;
     private String platform;
@@ -23,7 +24,8 @@ public class ServerContainer extends Thread {
     private String serverPath;
     private int port;
 
-    public ServerContainer(DockerClient dockerClient, String basePath, String platform, String version, int port) {
+    public ServerContainer(String prefix, DockerClient dockerClient, String basePath, String platform, String version, int port) {
+        this.prefix = prefix;
         this.dockerClient = dockerClient;
         this.basePath = basePath;
         this.platform = platform;
@@ -31,7 +33,8 @@ public class ServerContainer extends Thread {
         this.port = port;
     }
 
-    public ServerContainer(DockerClient dockerClient, String basePath, String containerId, String uniqueId) {
+    public ServerContainer(String prefix, DockerClient dockerClient, String basePath, String containerId, String uniqueId) {
+        this.prefix = prefix;
         this.dockerClient = dockerClient;
         this.basePath = basePath;
         this.containerId = containerId;
@@ -47,11 +50,9 @@ public class ServerContainer extends Thread {
         this.uniqueId = UUID.randomUUID();
         this.serverPath = this.basePath + "/" + this.uniqueId + "/server";
         String imageName = "itzg/minecraft-server";
-        String containerName = "2weeksmc-server-" + this.uniqueId;
+        String containerName = this.prefix + "-" + this.uniqueId;
         File serverDir = new File(this.serverPath);
-        if (!serverDir.exists()) {
-            serverDir.mkdirs();
-        }
+        createServerDirectory(serverDir);
         Volume serverVolume = new Volume("/data");
         ExposedPort containerPort = ExposedPort.tcp(25565);
         Ports portBindings = new Ports();
@@ -60,7 +61,8 @@ public class ServerContainer extends Thread {
                 .withName(containerName)
                 .withHostConfig(HostConfig.newHostConfig()
                         .withBinds(new Bind(this.serverPath, serverVolume))
-                        .withPortBindings(portBindings))
+                        .withPortBindings(portBindings)
+                        .withRestartPolicy(RestartPolicy.alwaysRestart()))
                 .withEnv("EULA=TRUE", "TYPE=" + this.platform.toUpperCase(), "VERSION=" + this.version)
                 .exec();
         this.containerId = container.getId();
@@ -112,11 +114,9 @@ public class ServerContainer extends Thread {
     public String recreateAndStartContainerFromDirectory(String uniqueId) {
         this.uniqueId = UUID.fromString(uniqueId);
         this.serverPath = this.basePath + "/" + this.uniqueId + "/server";
-        String containerName = "2weeksmc-server-" + this.uniqueId;
+        String containerName = this.prefix + "-" + this.uniqueId;
         File serverDir = new File(serverPath);
-        if (!serverDir.exists()) {
-            serverDir.mkdirs();
-        }
+        createServerDirectory(serverDir);
         Volume serverVolume = new Volume("/data");
         ExposedPort containerPort = ExposedPort.tcp(25565);
         Ports portBindings = new Ports();
@@ -125,7 +125,8 @@ public class ServerContainer extends Thread {
                 .withName(containerName)
                 .withHostConfig(HostConfig.newHostConfig()
                         .withBinds(new Bind(serverPath, serverVolume))
-                        .withPortBindings(portBindings))
+                        .withPortBindings(portBindings)
+                        .withRestartPolicy(RestartPolicy.alwaysRestart()))
                 .withEnv("EULA=TRUE", "TYPE=" + this.platform.toUpperCase(), "VERSION=" + this.version)
                 .exec();
         this.containerId = container.getId();
@@ -190,6 +191,12 @@ public class ServerContainer extends Thread {
         try {
             this.dockerClient.removeContainerCmd(this.containerId).exec();
         } catch (NotModifiedException ignored) {
+        }
+    }
+
+    private void createServerDirectory(File serverDir) {
+        if (!serverDir.exists()) {
+            serverDir.mkdirs();
         }
     }
 

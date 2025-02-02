@@ -1,4 +1,4 @@
-package com.twoweeksmc.dsm.common.server;
+package de.eztxm.dsm.common.server.manager;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import de.eztxm.dsm.common.server.ServerState;
+import de.eztxm.dsm.common.server.container.ServerContainer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -23,13 +25,15 @@ import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 
 public class ServerManager extends Thread {
+    private final String prefix;
     private final int startPort;
     private final String basePath;
     private DockerClient dockerClient;
     private HashMap<String, ServerContainer> serverContainers;
     private HashMap<String, Path> containerPaths;
 
-    public ServerManager(int startPort, String basePath) {
+    public ServerManager(String prefix, int startPort, String basePath) {
+        this.prefix = prefix;
         this.startPort = startPort;
         this.basePath = basePath;
     }
@@ -51,7 +55,7 @@ public class ServerManager extends Thread {
 
     public void createServerContainer(String platform, String version) {
         this.mapping();
-        ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, platform, version,
+        ServerContainer container = new ServerContainer(this.prefix, this.dockerClient, this.basePath, platform, version,
                 this.getFreePort());
         container.start();
         String containerId = container.createAndStartContainer();
@@ -60,7 +64,7 @@ public class ServerManager extends Thread {
 
     public void recreateServerContainer(String platform, String version, String uniqueId) {
         this.mapping();
-        ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, platform, version,
+        ServerContainer container = new ServerContainer(this.prefix, this.dockerClient, this.basePath, platform, version,
                 this.getFreePort());
         container.start();
         String containerId = container.recreateAndStartContainerFromDirectory(uniqueId);
@@ -216,7 +220,7 @@ public class ServerManager extends Thread {
                 .filter(container -> {
                     String[] names = container.getNames();
                     for (String name : names) {
-                        if (name.startsWith("/2weeksmc-server-")) {
+                        if (name.startsWith("/" + this.prefix +  "-")) {
                             return true;
                         }
                     }
@@ -239,7 +243,7 @@ public class ServerManager extends Thread {
                 .filter(container -> {
                     String[] names = container.getNames();
                     for (String name : names) {
-                        if (name.startsWith("/2weeksmc-server-")) {
+                        if (name.startsWith("/" + prefix +  "-")) {
                             return true;
                         }
                     }
@@ -258,8 +262,8 @@ public class ServerManager extends Thread {
         this.serverContainers = new HashMap<>();
         this.containerPaths = new HashMap<>();
         this.getContainerNamesAndIds().forEach((containerName, containerId) -> {
-            ServerContainer container = new ServerContainer(this.dockerClient, this.basePath, containerId,
-                    containerName.split("2weeksmc-server-")[1]);
+            ServerContainer container = new ServerContainer(this.prefix, this.dockerClient, this.basePath, containerId,
+                    containerName.split(prefix + "-")[1]);
             container.start();
             this.serverContainers.put(containerName, container);
             this.containerPaths.put(containerName, Path.of(container.getServerPath()));
