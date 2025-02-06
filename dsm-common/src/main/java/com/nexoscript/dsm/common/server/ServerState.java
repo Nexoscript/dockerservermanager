@@ -1,4 +1,4 @@
-package de.eztxm.dsm.common.server;
+package com.nexoscript.dsm.common.server;
 
 public enum ServerState {
     OFFLINE,

@@ -1,4 +1,4 @@
-package de.eztxm.dsm.common.server.container;
+package com.nexoscript.dsm.common.server.container;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;

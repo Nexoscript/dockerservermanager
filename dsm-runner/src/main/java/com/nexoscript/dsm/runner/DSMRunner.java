@@ -1,9 +1,9 @@
-package de.eztxm.dsm.runner;
+package com.nexoscript.dsm.runner;
 
 import java.io.IOException;
 
-import de.eztxm.dsm.common.server.manager.ServerManager;
-import de.eztxm.dsm.console.JLineConsole;
+import com.nexoscript.dsm.common.server.manager.ServerManager;
+import com.nexoscript.dsm.console.JLineConsole;
 
 public class DSMRunner {
     private static DSMRunner instance;

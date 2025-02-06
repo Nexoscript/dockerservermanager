@@ -1,4 +1,4 @@
-package de.eztxm.dsm.console;
+package com.nexoscript.dsm.console;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

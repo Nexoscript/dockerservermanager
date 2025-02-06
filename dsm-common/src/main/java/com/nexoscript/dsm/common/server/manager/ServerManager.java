@@ -1,4 +1,4 @@
-package de.eztxm.dsm.common.server.manager;
+package com.nexoscript.dsm.common.server.manager;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import de.eztxm.dsm.common.server.ServerState;
-import de.eztxm.dsm.common.server.container.ServerContainer;
+import com.nexoscript.dsm.common.server.ServerState;
+import com.nexoscript.dsm.common.server.container.ServerContainer;
 import org.json.JSONException;
 import org.json.JSONObject;
 

@@ -1,4 +1,4 @@
-package de.eztxm.dsm.console;
+package com.nexoscript.dsm.console;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -16,8 +16,8 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.InfoCmp;
 
-import de.eztxm.dsm.common.server.manager.ServerManager;
-import de.eztxm.dsm.common.server.ServerState;
+import com.nexoscript.dsm.common.server.manager.ServerManager;
+import com.nexoscript.dsm.common.server.ServerState;
 
 public final class JLineConsole {
     private final Terminal terminal;
