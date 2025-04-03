@@ -23,14 +23,16 @@ public class ServerContainer extends Thread {
     private UUID uniqueId;
     private String serverPath;
     private int port;
+    private int memory;
 
-    public ServerContainer(String prefix, DockerClient dockerClient, String basePath, String platform, String version, int port) {
+    public ServerContainer(String prefix, DockerClient dockerClient, String basePath, String platform, String version, int port, int memory) {
         this.prefix = prefix;
         this.dockerClient = dockerClient;
         this.basePath = basePath;
         this.platform = platform;
         this.version = version;
         this.port = port;
+        this.memory = memory;
     }
 
     public ServerContainer(String prefix, DockerClient dockerClient, String basePath, String containerId, String uniqueId) {
@@ -63,7 +65,7 @@ public class ServerContainer extends Thread {
                         .withBinds(new Bind(this.serverPath, serverVolume))
                         .withPortBindings(portBindings)
                         .withRestartPolicy(RestartPolicy.alwaysRestart()))
-                .withEnv("EULA=TRUE", "TYPE=" + this.platform.toUpperCase(), "VERSION=" + this.version)
+                .withEnv("EULA=TRUE", "TYPE=" + this.platform.toUpperCase(), "VERSION=" + this.version, "MEMORY=" + this.memory + "M")
                 .exec();
         this.containerId = container.getId();
         System.out.println(this.containerId);
@@ -127,7 +129,7 @@ public class ServerContainer extends Thread {
                         .withBinds(new Bind(serverPath, serverVolume))
                         .withPortBindings(portBindings)
                         .withRestartPolicy(RestartPolicy.alwaysRestart()))
-                .withEnv("EULA=TRUE", "TYPE=" + this.platform.toUpperCase(), "VERSION=" + this.version)
+                .withEnv("EULA=TRUE", "TYPE=" + this.platform.toUpperCase(), "VERSION=" + this.version, "MEMORY=" + this.memory + "M")
                 .exec();
         this.containerId = container.getId();
         this.dockerClient.startContainerCmd(this.containerId).exec();

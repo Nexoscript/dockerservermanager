@@ -53,20 +53,20 @@ public class ServerManager extends Thread {
         this.mapping();
     }
 
-    public ServerContainer createServerContainer(String platform, String version) {
+    public ServerContainer createServerContainer(String platform, String version, int memory) {
         this.mapping();
         ServerContainer container = new ServerContainer(this.prefix, this.dockerClient, this.basePath, platform, version,
-                this.getFreePort());
+                this.getFreePort(), memory);
         container.start();
         String containerId = container.createAndStartContainer();
         this.serverContainers.put(containerId, container);
         return container;
     }
 
-    public ServerContainer recreateServerContainer(String platform, String version, String uniqueId) {
+    public ServerContainer recreateServerContainer(String platform, String version, String uniqueId, int memory) {
         this.mapping();
         ServerContainer container = new ServerContainer(this.prefix, this.dockerClient, this.basePath, platform, version,
-                this.getFreePort());
+                this.getFreePort(), memory);
         container.start();
         String containerId = container.recreateAndStartContainerFromDirectory(uniqueId);
         this.serverContainers.put(containerId, container);

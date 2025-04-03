@@ -66,7 +66,7 @@ public final class JLineConsole {
                             this.print("[FF3333]Need platform and version argument");
                             continue;
                         }
-                        this.serverManager.createServerContainer(args[0].toLowerCase(), args[1].toLowerCase());
+                        this.serverManager.createServerContainer(args[0].toLowerCase(), args[1].toLowerCase(), Integer.parseInt(args[2]));
                     }
                     case "start-container", "start-con" -> {
                         if (args.length < 1) {
@@ -81,7 +81,7 @@ public final class JLineConsole {
                             continue;
                         }
                         this.serverManager.recreateServerContainer(args[1].toLowerCase(), args[2].toLowerCase(),
-                                args[0]);
+                                args[0], Integer.parseInt(args[3]));
                     }
                     case "restart-container", "restart-con" -> {
                         if (args.length < 1) {
