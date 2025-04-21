@@ -118,8 +118,8 @@ public final class JLineConsole {
                     }
                     case "help" -> {
                         this.print("&7-------------------------------&eHelp&7-------------------------------");
-                        this.print("&b create-container <platform> <version> &7- &fCreate a container with the platform and version");
-                        this.print("&b recreate-container <uniqueId> <platform> <version> &7- &fRecreate a container with the uniqueId");
+                        this.print("&b create-container <platform> <version> <memory> &7- &fCreate a container with the platform and version");
+                        this.print("&b recreate-container <uniqueId> <platform> <version> <memory> &7- &fRecreate a container with the uniqueId");
                         this.print("&b restart-container <name> &7- &fRestart a container with the name");
                         this.print("&b start-container <name> &7- &fStart a container with the name");
                         this.print("&b stop-container <name> &7- &fStop a container with the name");

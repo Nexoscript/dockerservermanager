@@ -18,7 +18,7 @@ public class DSMRunner {
 
     public DSMRunner() throws IOException {
         this.console = new JLineConsole();
-        this.serverManager = new ServerManager("2weeksmc-server", 10000, "/home/eztxmmc/.dsm-containers");
+        this.serverManager = new ServerManager("2weeksmc-server", 10000, "D:/2weeksmc/dsm-containers");
     }
 
     public void start() {

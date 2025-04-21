@@ -65,7 +65,18 @@ public class ServerContainer extends Thread {
                         .withBinds(new Bind(this.serverPath, serverVolume))
                         .withPortBindings(portBindings)
                         .withRestartPolicy(RestartPolicy.alwaysRestart()))
-                .withEnv("EULA=TRUE", "TYPE=" + this.platform.toUpperCase(), "VERSION=" + this.version, "MEMORY=" + this.memory + "M")
+                .withEnv(
+                        "EULA=TRUE",
+                        "TYPE=" + this.platform.toUpperCase(),
+                        "VERSION=" + this.version,
+                        "MEMORY=" + this.memory + "M",
+                        "VIEW_DISTANCE=6",
+                        "SIMULATION_DISTANCE=4",
+                        "MAX_PLAYERS=4",
+                        "MOTD=Server hosted by 2weeksmc.com",
+                        "ONLINE_MODE=TRUE",
+                        "AIKAR_FLAGS=TRUE"
+                )
                 .exec();
         this.containerId = container.getId();
         System.out.println(this.containerId);
