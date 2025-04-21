@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import java.io.Closeable;
 import java.io.File;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public class ServerContainer extends Thread {
     private final String prefix;
@@ -24,8 +25,9 @@ public class ServerContainer extends Thread {
     private String serverPath;
     private int port;
     private int memory;
+    private String[] environmentVariables;
 
-    public ServerContainer(String prefix, DockerClient dockerClient, String basePath, String platform, String version, int port, int memory) {
+    public ServerContainer(String prefix, DockerClient dockerClient, String basePath, String platform, String version, int port, int memory, String[] environmentVariables) {
         this.prefix = prefix;
         this.dockerClient = dockerClient;
         this.basePath = basePath;
@@ -33,6 +35,7 @@ public class ServerContainer extends Thread {
         this.version = version;
         this.port = port;
         this.memory = memory;
+        this.environmentVariables = environmentVariables;
     }
 
     public ServerContainer(String prefix, DockerClient dockerClient, String basePath, String containerId, String uniqueId) {
@@ -59,24 +62,21 @@ public class ServerContainer extends Thread {
         ExposedPort containerPort = ExposedPort.tcp(25565);
         Ports portBindings = new Ports();
         portBindings.bind(containerPort, Ports.Binding.bindPort(this.port));
+        String[] result = Stream.concat(Stream.of(environmentVariables), Stream.of(
+                "EULA=TRUE",
+                "TYPE=" + this.platform.toUpperCase(),
+                "VERSION=" + this.version,
+                "MEMORY=" + this.memory + "M",
+                "ONLINE_MODE=TRUE",
+                "AIKAR_FLAGS=TRUE"
+        )).toArray(String[]::new);
         CreateContainerResponse container = this.dockerClient.createContainerCmd(imageName)
                 .withName(containerName)
                 .withHostConfig(HostConfig.newHostConfig()
                         .withBinds(new Bind(this.serverPath, serverVolume))
                         .withPortBindings(portBindings)
                         .withRestartPolicy(RestartPolicy.alwaysRestart()))
-                .withEnv(
-                        "EULA=TRUE",
-                        "TYPE=" + this.platform.toUpperCase(),
-                        "VERSION=" + this.version,
-                        "MEMORY=" + this.memory + "M",
-                        "VIEW_DISTANCE=6",
-                        "SIMULATION_DISTANCE=4",
-                        "MAX_PLAYERS=4",
-                        "MOTD=Server hosted by 2weeksmc.com",
-                        "ONLINE_MODE=TRUE",
-                        "AIKAR_FLAGS=TRUE"
-                )
+                .withEnv(result)
                 .exec();
         this.containerId = container.getId();
         System.out.println(this.containerId);
@@ -134,13 +134,21 @@ public class ServerContainer extends Thread {
         ExposedPort containerPort = ExposedPort.tcp(25565);
         Ports portBindings = new Ports();
         portBindings.bind(containerPort, Ports.Binding.bindPort(this.port));
+        String[] result = Stream.concat(Stream.of(environmentVariables), Stream.of(
+                "EULA=TRUE",
+                "TYPE=" + this.platform.toUpperCase(),
+                "VERSION=" + this.version,
+                "MEMORY=" + this.memory + "M",
+                "ONLINE_MODE=TRUE",
+                "AIKAR_FLAGS=TRUE"
+        )).toArray(String[]::new);
         CreateContainerResponse container = this.dockerClient.createContainerCmd("itzg/minecraft-server")
                 .withName(containerName)
                 .withHostConfig(HostConfig.newHostConfig()
                         .withBinds(new Bind(serverPath, serverVolume))
                         .withPortBindings(portBindings)
                         .withRestartPolicy(RestartPolicy.alwaysRestart()))
-                .withEnv("EULA=TRUE", "TYPE=" + this.platform.toUpperCase(), "VERSION=" + this.version, "MEMORY=" + this.memory + "M")
+                .withEnv(result)
                 .exec();
         this.containerId = container.getId();
         this.dockerClient.startContainerCmd(this.containerId).exec();

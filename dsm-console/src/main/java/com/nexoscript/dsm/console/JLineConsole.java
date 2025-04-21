@@ -62,11 +62,11 @@ public final class JLineConsole {
                 switch (command) {
                     case "clear" -> this.clear();
                     case "create-container", "create-con" -> {
-                        if (args.length < 2) {
+                        if (args.length < 4) {
                             this.print("[FF3333]Need platform and version argument");
                             continue;
                         }
-                        this.serverManager.createServerContainer(args[0].toLowerCase(), args[1].toLowerCase(), Integer.parseInt(args[2]));
+                        this.serverManager.createServerContainer(args[0].toLowerCase(), args[1].toLowerCase(), Integer.parseInt(args[2]), args[3].split(";"));
                     }
                     case "start-container", "start-con" -> {
                         if (args.length < 1) {
@@ -76,12 +76,12 @@ public final class JLineConsole {
                         this.serverManager.startServerContainer(args[0]);
                     }
                     case "recreate-container", "recreate-con" -> {
-                        if (args.length < 3) {
+                        if (args.length < 5) {
                             this.print("[FF3333]Need uniqueId, platform and version argument");
                             continue;
                         }
                         this.serverManager.recreateServerContainer(args[1].toLowerCase(), args[2].toLowerCase(),
-                                args[0], Integer.parseInt(args[3]));
+                                args[0], Integer.parseInt(args[3]), args[4].split(";"));
                     }
                     case "restart-container", "restart-con" -> {
                         if (args.length < 1) {
@@ -107,11 +107,9 @@ public final class JLineConsole {
                         }
                         this.serverManager.removeServerContainer(args[0]);
                     }
-                    case "list-containers", "list-cons" -> {
-                        this.serverManager.getContainers()
-                                .forEach(container -> this.print("&e" + container.getNames()[0].replace("/", "") + " - "
-                                        + this.serverManager.getServerStateById(container.getId())));
-                    }
+                    case "list-containers", "list-cons" -> this.serverManager.getContainers()
+                            .forEach(container -> this.print("&e" + container.getNames()[0].replace("/", "") + " - "
+                                    + this.serverManager.getServerStateById(container.getId())));
                     case "exit", "stop", "shutdown" -> {
                         this.isRunning = false;
                         this.print("Stopping server...");
